@@ -1,5 +1,6 @@
 package com.excise.law.ajax;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.ServletContext;
@@ -13,11 +14,19 @@ import com.excise.law.domain.MsStatute;
 import com.excise.law.domain.MsStatutesub;
 import com.excise.law.domain.StMatr;
 import com.excise.law.domain.StStatutesub;
-import com.excise.law.domain.TsRel; // a
-import com.excise.law.domain.TsRelDTO; // a
-import com.excise.law.domain.TsRelKeyMap; // a
+import com.excise.law.domain.TmArticleGroup;
+import com.excise.law.domain.TmArticleSection;
+import com.excise.law.domain.TmLawType;
+import com.excise.law.domain.TmStatue;
+import com.excise.law.domain.TsArticle;
+import com.excise.law.domain.TsExArticleCompleted;
+import com.excise.law.domain.TsExArticleHeader;
+import com.excise.law.domain.TsLaw;
+import com.excise.law.domain.TsRel;
+import com.excise.law.domain.TsRelDTO;
+import com.excise.law.domain.TsRelKeyMap;
 import com.excise.law.domain.TsRelMap;
-import com.excise.law.domain.TsRelTableMap; //a
+import com.excise.law.domain.TsRelTableMap;
 import com.excise.law.service.LinkExciseLawService;
 
 public class LinkExciseLawAjax {
@@ -128,5 +137,72 @@ public class LinkExciseLawAjax {
 	}
 	public List<TsRelDTO>  deleteTsRel(TsRel persistentInstance){
 		return linkExciseLawService.deleteTsRel(persistentInstance);
+	}
+	
+	// new Link
+	public List initLink(){
+		List list=new ArrayList();
+		list.add(linkExciseLawService.listTmStatues());
+		list.add(linkExciseLawService.listTmLawTypes());
+		return list;
+	}
+	public List loadGroupSection(String type,String statueId, String lawTypeId){//type=1 compleate,2=article,3=ext
+		List list=new ArrayList();
+		if(type.equals("1")){
+			list.add(linkExciseLawService.listTmArticleGroups());
+			list.add(linkExciseLawService.listTmArticleSections());
+			list.add(linkExciseLawService.listTsExArticleCompleteds(statueId,lawTypeId));
+		}else if(type.equals("2")){
+			list.add(linkExciseLawService.listTmArticleGroups());
+			list.add(linkExciseLawService.listTmArticleSections());
+			list.add(linkExciseLawService.listTsArticles(statueId,lawTypeId));
+		}/*else if(type.equals("3")){
+			return linkExciseLawService.listTsLaws(null,null);
+		} */
+		return list;
+	}
+	public List<TmStatue> listTmStatues(){
+		return linkExciseLawService.listTmStatues();
+	}
+	public List<TmLawType> listTmLawTypes()    {
+		return linkExciseLawService.listTmLawTypes();
+	}	
+	/*public List loadGroupSection(String type,String statueId, String lawTypeId){
+		List list=new ArrayList();
+		list.add(linkExciseLawService.listTmArticleGroups());
+		list.add(linkExciseLawService.listTmArticleSections();
+		return list;
+	}*/
+	public List<TmArticleGroup> listTmArticleGroups(){
+			return linkExciseLawService.listTmArticleGroups();
+	}
+	public List<TmArticleSection> listTmArticleSections(){
+			return linkExciseLawService.listTmArticleSections();
+	}
+	
+	public List<TsExArticleCompleted> listTsExArticleCompleteds(String statueId, String lawTypeId){
+			return linkExciseLawService.listTsExArticleCompleteds(statueId,lawTypeId);
+	}
+	public List<TsExArticleHeader> listTsExArticleHeader(String type,String statueId, String lawTypeId){
+			return linkExciseLawService.listTsExArticleHeader(type,statueId, lawTypeId);
+	}
+	public List<TsLaw> listTsLaws(String statueId, String lawTypeId){
+		   
+			return linkExciseLawService.listTsLaws( statueId,  lawTypeId);
+	}
+	public List<TsRelDTO> listExistingLink(Long rmId){
+		return linkExciseLawService.listExistingLink(rmId);
+	}
+	public TsLaw getTsLaw(Long lawId){
+		return linkExciseLawService.getTsLaw(lawId);
+	}
+	public List<TsArticle> getTsArticleList(String groupId){
+		return linkExciseLawService.getTsArticleList(groupId);
+	}
+	public TsExArticleCompleted getTsExArticleCompleted(Long articleCompletedId){
+		return linkExciseLawService.getTsExArticleCompleted(articleCompletedId);
+	}
+	public TsArticle getTsArticle(Long articleId){
+		return linkExciseLawService.getTsArticle(articleId);
 	}
 }
