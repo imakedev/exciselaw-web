@@ -1,5 +1,6 @@
 package com.excise.law.service.jpa;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,6 +16,14 @@ import com.excise.law.domain.MsStatute;
 import com.excise.law.domain.MsStatutesub;
 import com.excise.law.domain.StMatr;
 import com.excise.law.domain.StStatutesub;
+import com.excise.law.domain.TmArticleGroup;
+import com.excise.law.domain.TmArticleSection;
+import com.excise.law.domain.TmLawType;
+import com.excise.law.domain.TmStatue;
+import com.excise.law.domain.TsArticle;
+import com.excise.law.domain.TsExArticleCompleted;
+import com.excise.law.domain.TsExArticleHeader;
+import com.excise.law.domain.TsLaw;
 import com.excise.law.domain.TsRel;
 import com.excise.law.domain.TsRelDTO;
 import com.excise.law.domain.TsRelKeyMap;
@@ -365,13 +374,24 @@ public class LinkExciseLawServiceImpl extends LawServiceCommon implements
 					tsRelDTOs = new ArrayList<TsRelDTO>(tsRels.size());
 					for (TsRel tsRel : tsRels) {
 						TsRelDTO tsRelDTO = new TsRelDTO();
-						String trTableName = tsRel.getTrTableName();
+						String articleHeaderTable = tsRel.getArticleHeaderTable(); 
+						int articleHeaderId_key =tsRel.getArticleHeaderId().intValue();
+						String rmIdStr = tsRelMap.getRmId()+"";
+						String rmName = tsRel.getTsRelMap().getRmName()+"";
+						tsRelDTO.setRmId(rmIdStr);
+						tsRelDTO.setRmName(rmName);
+						tsRelDTO.setTrId(tsRel.getTrId());
+						tsRelDTO.setTrTableName(articleHeaderTable);
+						tsRelDTO.setTrKey(articleHeaderId_key+"");
+						String trTitle = null;
+						
+						/*String trTableName = tsRel.getTrTableName();
 						String trKey = tsRel.getTrKey();
 						tsRelDTO.setTrId(tsRel.getTrId());
 						tsRelDTO.setTrTableName(trTableName);
 						tsRelDTO.setTrKey(trKey);
-						String trTitle = null;
-						if (trTableName != null) {
+						String trTitle = null;*/
+						/*if (trTableName != null) {
 							if (trTableName.equals("ST_MATR")) {
 								query = session
 								.createQuery(" from StMatr stMatr where stMatr.stMatrId=?  ");
@@ -387,6 +407,38 @@ public class LinkExciseLawServiceImpl extends LawServiceCommon implements
 							}
 							tsRelDTO.setTrTitle(trTitle);					
 						}
+						tsRelDTOs.add(tsRelDTO);*/
+						if (articleHeaderTable != null) {
+							if (articleHeaderTable.equals("TS_LAW")) {
+								query = session
+								.createQuery(" from TsLaw tsLaw where tsLaw.lawId="+articleHeaderId_key);
+								//query.setParameter(0, Long.parseLong(trKey));
+								Object obj= query.uniqueResult();
+								trTitle=((TsLaw)obj).getLawTitleThai();
+							} else if (articleHeaderTable.equals("TS_ARTICLE")) {
+								query = session
+								        .createQuery(" from TsExArticleHeader tsExArticleHeader where tsExArticleHeader.articleHeaderId="+articleHeaderId_key); 
+								/*query = session
+						        .createQuery(" from TsArticle tsArticle where tsArticle.articleId="+articleHeaderId_key); */
+								Object obj= query.uniqueResult();
+							//	int articleHeaderId=((TsArticle)obj).getArticleHeaderId().intValue();
+								trTitle=((TsExArticleHeader)obj).getArticleHeaderName();
+								/*query = session
+								        .createQuery(" from TsExArticleHeader tsExArticleHeader where tsExArticleHeader.articleHeaderId="+articleHeaderId); 
+										obj= query.uniqueResult();
+								trTitle=((TsExArticleHeader)obj).getArticleHeaderName();*/
+							}else if (articleHeaderTable.equals("TS_EX_ARTICLE_COMPLETED")) {
+								/*query = session
+								        .createQuery(" from TsExArticleCompleted tsExArticleCompleted where tsExArticleCompleted.articleCompletedId="+articleHeaderId_key); 
+										Object obj= query.uniqueResult();
+										int articleHeaderId=((TsExArticleCompleted)obj).getArticleHeaderId().intValue();*/
+										query = session
+												.createQuery(" from TsExArticleHeader tsExArticleHeader where tsExArticleHeader.articleHeaderId="+articleHeaderId_key); 
+										Object obj= query.uniqueResult();
+										trTitle=((TsExArticleHeader)obj).getArticleHeaderName();
+							}
+							tsRelDTO.setTrTitle(trTitle);					
+						}
 						tsRelDTOs.add(tsRelDTO);
 					}
 				}
@@ -395,5 +447,183 @@ public class LinkExciseLawServiceImpl extends LawServiceCommon implements
 		}
 		
 		return tsRelDTOs;
+	}
+	@Transactional(readOnly = true)
+	public List<TmStatue> listTmStatues(){
+		List<TmStatue> tmStatues=null;
+		Session session = this.sessionAnnotationFactory.getCurrentSession();
+		Query query = session
+				.createQuery(" from TmStatue tmStatue order by tmStatue.statueOrder ");
+		tmStatues = query.list(); 
+		return tmStatues;
+	}
+	@Transactional(readOnly = true)
+	public List<TmLawType> listTmLawTypes(){
+		List<TmLawType> tmLawTypes=null;
+		Session session = this.sessionAnnotationFactory.getCurrentSession();
+		Query query = session
+				.createQuery(" from TmLawType tmLawType order by tmLawType.lawTypeOrder ");
+		tmLawTypes= query.list(); 
+		return tmLawTypes;
+	}
+	
+	@Transactional(readOnly = true)
+	public List<TmArticleGroup> listTmArticleGroups(){
+		Session session = this.sessionAnnotationFactory.getCurrentSession();
+		Query query = session
+				.createQuery(" from TmArticleGroup tmArticleGroup order by tmArticleGroup.articleGroupOrder ");
+        return query.list(); 
+	}
+	@Transactional(readOnly = true)
+	public List<TmArticleSection> listTmArticleSections(){
+		Session session = this.sessionAnnotationFactory.getCurrentSession();
+		Query query = session
+				.createQuery(" from TmArticleSection tmArticleSection order by tmArticleSection.articleSectionOrder ");
+        return query.list(); 
+	}
+	@Transactional(readOnly = true)
+	public List<TsExArticleCompleted> listTsExArticleCompleteds(String statueId, String lawTypeId){
+		Session session = this.sessionAnnotationFactory.getCurrentSession();
+		Query query = session
+				.createQuery(" from TsExArticleCompleted tsExArticleCompleted order by tsExArticleCompleted.articleCompletedOrder ");
+        return query.list(); 
+	}
+	@Transactional(readOnly = true)
+	public List<TsArticle> listTsArticles(String statueId, String lawTypeId){
+		Session session = this.sessionAnnotationFactory.getCurrentSession();
+		Query query = session
+				.createQuery(" from TsArticle tsArticle order by tsArticle.articleOrder ");
+        return query.list(); 
+	}
+	@Transactional(readOnly = true)
+	public List<TsLaw> listTsLaws(String statueId, String lawTypeId){
+   
+	Session session = this.sessionAnnotationFactory.getCurrentSession();
+		Query query = session
+				.createQuery(" from TsLaw TsLaw order by TsLaw.lawOrder ");
+        return query.list(); 
+    }
+	public List<TsExArticleHeader> listTsExArticleHeader(String type,String statueId, String lawTypeId){
+		Session session = this.sessionAnnotationFactory.getCurrentSession();
+		Query query = session
+				.createQuery(" from TsExArticleHeader tsExArticleHeader ");
+        return query.list(); 
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Transactional(readOnly = true)
+	public List<TsRelDTO> listExistingLink(Long rmId) {
+		// TODO Auto-generated method stub
+		List<TsRelDTO> tsRelDTOs=null;
+		Session session = this.sessionAnnotationFactory.getCurrentSession();
+		Query query = session
+				.createQuery(" from TsRel tsRel where tsRel.tsRelMap.rmId=?  ");
+		query.setParameter(0, rmId);
+		List<TsRel> tsRels = query.list(); 
+		
+		if (tsRels != null && tsRels.size() > 0) {
+			tsRelDTOs = new ArrayList<TsRelDTO>(tsRels.size());
+			for (TsRel tsRel : tsRels) {
+				TsRelDTO tsRelDTO = new TsRelDTO();
+				//String trTableName =tsRel.getTrTableName();
+				//String trKey =tsRel.getTrKey();
+				String articleHeaderTable = tsRel.getArticleHeaderTable(); 
+				int articleHeaderId_key =tsRel.getArticleHeaderId().intValue();
+				String rmIdStr = rmId.intValue()+"";
+				String rmName = tsRel.getTsRelMap().getRmName()+"";
+				tsRelDTO.setRmId(rmIdStr);
+				tsRelDTO.setRmName(rmName);
+				tsRelDTO.setTrId(tsRel.getTrId());
+				tsRelDTO.setTrTableName(articleHeaderTable);
+				tsRelDTO.setTrKey(articleHeaderId_key+"");
+				String trTitle = null;
+				
+				if (articleHeaderTable != null) {
+					if (articleHeaderTable.equals("TS_LAW")) {
+						query = session
+						.createQuery(" from TsLaw tsLaw where tsLaw.lawId="+articleHeaderId_key);
+						//query.setParameter(0, Long.parseLong(trKey));
+						Object obj= query.uniqueResult();
+						trTitle=((TsLaw)obj).getLawTitleThai();
+					} else if (articleHeaderTable.equals("TS_ARTICLE")) {
+						query = session
+						        .createQuery(" from TsExArticleHeader tsExArticleHeader where tsExArticleHeader.articleHeaderId="+articleHeaderId_key); 
+						/*query = session
+				        .createQuery(" from TsArticle tsArticle where tsArticle.articleId="+articleHeaderId_key); */
+						Object obj= query.uniqueResult();
+					//	int articleHeaderId=((TsArticle)obj).getArticleHeaderId().intValue();
+						trTitle=((TsExArticleHeader)obj).getArticleHeaderName();
+						/*query = session
+						        .createQuery(" from TsExArticleHeader tsExArticleHeader where tsExArticleHeader.articleHeaderId="+articleHeaderId); 
+								obj= query.uniqueResult();
+						trTitle=((TsExArticleHeader)obj).getArticleHeaderName();*/
+					}else if (articleHeaderTable.equals("TS_EX_ARTICLE_COMPLETED")) {
+						/*query = session
+						        .createQuery(" from TsExArticleCompleted tsExArticleCompleted where tsExArticleCompleted.articleCompletedId="+articleHeaderId_key); 
+								Object obj= query.uniqueResult();
+								int articleHeaderId=((TsExArticleCompleted)obj).getArticleHeaderId().intValue();*/
+								query = session
+										.createQuery(" from TsExArticleHeader tsExArticleHeader where tsExArticleHeader.articleHeaderId="+articleHeaderId_key); 
+								Object obj= query.uniqueResult();
+								trTitle=((TsExArticleHeader)obj).getArticleHeaderName();
+					}
+					tsRelDTO.setTrTitle(trTitle);					
+				}
+				tsRelDTOs.add(tsRelDTO);
+			}
+		}
+		return tsRelDTOs;
+	}
+
+	@Transactional(readOnly = true)
+	public TsLaw getTsLaw(Long lawId){
+		Query query = this.sessionAnnotationFactory.getCurrentSession()
+				.createQuery(" from TsLaw tsLaw where tsLaw.lawId=?  ");
+		query.setParameter(0, lawId);
+		Object obj = query.uniqueResult();
+		if (obj != null) {
+			return (TsLaw) obj;
+		}
+		return null;
+	}
+
+	@Transactional(readOnly = true)
+	public TsExArticleCompleted getTsExArticleCompleted(Long articleCompletedId){
+		Query query = this.sessionAnnotationFactory.getCurrentSession()
+				.createQuery(" from TsExArticleCompleted tsExArticleCompleted where tsExArticleCompleted.articleCompletedId=?  ");
+		query.setParameter(0, articleCompletedId);
+		Object obj = query.uniqueResult();
+		if (obj != null) {
+			return (TsExArticleCompleted) obj;
+		}
+		return null;
+	}
+
+	@Transactional(readOnly = true)
+	public TsArticle getTsArticle(Long articleId){
+		Query query = this.sessionAnnotationFactory.getCurrentSession()
+				.createQuery(" from TsArticle tsArticle where tsArticle.articleId=?  ");
+		query.setParameter(0, articleId);
+		Object obj = query.uniqueResult();
+		if (obj != null) {
+			return (TsArticle) obj;
+		}
+		return null;
+	}
+	@Transactional(readOnly = true)
+	@Override
+	public List<TsArticle> getTsArticleList(String groupId) {//statue_id, law_type_id, article_header_id
+		String[] ids=groupId.split("_");
+	/*	private BigDecimal statueId;
+		private BigDecimal lawTypeId;
+		private BigDecimal articleHeaderId;*/
+		// TODO Auto-generated method stub
+		Query query = this.sessionAnnotationFactory.getCurrentSession()
+				.createQuery(" from TsArticle tsArticle where tsArticle.statueId=:statueId " +
+						"and tsArticle.lawTypeId=:lawTypeId and tsArticle.articleHeaderId=:articleHeaderId order by tsArticle.articleOrder ");
+		query.setParameter("statueId", new BigDecimal(ids[0]));
+		query.setParameter("lawTypeId", new BigDecimal(ids[1]));
+		query.setParameter("articleHeaderId", new BigDecimal(ids[2]));
+		return query.list(); 
 	}
 }
