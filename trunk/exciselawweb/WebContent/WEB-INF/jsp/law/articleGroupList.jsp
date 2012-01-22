@@ -43,6 +43,73 @@
 .paging_aoe_paging span.paginate_active {
 	background-color: #99B3FF;
 }
+/*  start add css new paging*/
+.pagination {
+	padding: 2px;
+	float: right;
+	font-family: Tahoma, Verdana;
+	font-size: 12px;
+}
+
+.pagination ul {
+	margin: 0;
+	padding: 0;
+	/*font-size: 16px;*/
+	font-family: Tahoma, Verdana;
+	font-size: 12px;
+}
+
+.pagination li {
+	list-style-type: none;
+	display: inline;
+	padding-bottom: 1px;
+	font-family: Tahoma, Verdana;
+	font-size: 12px;
+}
+
+.pagination a,.pagination a:visited {
+	padding: 0 5px;
+	border: 1px solid #9aafe5;
+	text-decoration: none;
+	color: #2e6ab1;
+	font-family: Tahoma, Verdana;
+	font-size: 12px;
+}
+
+.pagination a:hover,.pagination a:active {
+	border: 1px solid #2b66a5;
+	color: #000;
+	background-color: #FFFF80;
+	font-family: Tahoma, Verdana;
+	font-size: 12px;
+}
+
+.pagination a.currentpage {
+	background-color: #2e6ab1;
+	color: #FFF !important;
+	border-color: #2b66a5;
+	font-weight: bold;
+	cursor: default;
+	font-family: Tahoma, Verdana;
+	font-size: 12px;
+}
+
+.pagination a.disablelink,.pagination a.disablelink:hover {
+	background-color: white;
+	cursor: default;
+	color: #929292;
+	border-color: #929292;
+	font-weight: normal !important;
+	font-family: Tahoma, Verdana;
+	font-size: 12px;
+}
+
+.pagination a.prevnext {
+	font-weight: bold;
+	font-family: Tahoma, Verdana;
+	font-size: 12px;
+}
+/* end add css new paging*/
 </style>
 <script language="JavaScript" type="text/JavaScript">
 var _path='<%=request.getContextPath()%>';
@@ -313,15 +380,18 @@ function doSort(pstrFld, pstrOrd){
 }
 function doEdit(id){ 
 	window.location=_path+'/law/articleGroup.do?action=edit&articleGroupId='+id;
-} function callfunc(functype){	
-	
+} function callfunc(_pageIndex){	
+	// get pagesize
+	var pageSize=$("#select_perpage").val() ;
 	var articleGroup={ 
 		articleGroupType:document.getElementById("articleGroupType").value,
 		statueId:document.getElementById("statueId").value,
 		articleGroupName:document.getElementById("articleGroupName").value
 	};
+	//set paging
 	var paging={
-
+			pageNo:_pageIndex,
+			pageSize:pageSize
 	} 
 	oTable.fnClearTable();
 	oTable.fnProcessingIndicator();      // On
@@ -339,6 +409,62 @@ function doEdit(id){
 					                   ]);
 				 }
 				 oTable.fnProcessingIndicator(false); // Off
+				 // calculate page
+				 var size=dataFromServer[1];
+				 var pagingScript_recordCount=parseInt(size, 10);;//totalRecord;
+					var pagingScript_recordPerPage=parseInt(pageSize,10);//pageSize;//RECORD_PERPAGE;
+					       		
+					var plus = pagingScript_recordCount%pagingScript_recordPerPage!=0?1:0;
+					var pagingScript_pageCount=parseInt((pagingScript_recordCount/pagingScript_recordPerPage),10)+plus;
+					var pageNo=parseInt(_pageIndex,10);
+					var startIndex =pageNo-parseInt((pageBetween/2),10);
+					var endIndex = pageNo+(parseInt((pageBetween/2),10)-1); 
+					//alert("startIndex="+startIndex)
+					var page_plus=pageBetween-((endIndex-startIndex)+1);
+						endIndex=endIndex+page_plus;
+						
+				  if(startIndex<1){
+							   startIndex = 1;
+							   endIndex=pageBetween;
+							}
+						    
+				   if(endIndex>pagingScript_pageCount){    		
+						    endIndex = pagingScript_pageCount;
+						    if((endIndex-pageBetween+1)>0)
+						   	startIndex=endIndex-pageBetween+1;
+				    } 
+					       	
+				   var havePrev=false;
+					var haveNext=false;
+				   var pagePrev=pageNo;
+					var pageNext=pageNo;
+					if(pageNo!=1){
+				       		havePrev=true;
+				       		pagePrev=pagePrev-1;
+					}
+				    if(pageNo!=pagingScript_pageCount){
+				       		haveNext=true; 
+				       		pageNext=pageNext+1;
+				    }
+				    havePrev=true;
+				    haveNext=true;
+				    
+					var pageStr="<ul>";
+			       if(havePrev)
+			    	   pageStr=pageStr+"<li><a  onClick=\"callfunc('1')\"  class=\"prevnext\">« First</a></li>&nbsp;"+
+			    	   					"<li><a  onClick=\"callfunc('"+pagePrev+"')\"  class=\"prevnext\">« Previous</a></li>&nbsp;";
+				   for(var k=startIndex;k<=endIndex;k++ ){
+					   if(k==pageNo) 
+					  	 pageStr = pageStr+"<li><a class=\"currentpage\">"+k+"</a></li>&nbsp;";
+					  else
+						 pageStr = pageStr+"<li><a  onClick=\"callfunc('"+k+"')\">"+k+"</a></li>&nbsp;";
+				    }
+				   if(haveNext)
+			    	   pageStr=pageStr+"<li><a  onClick=\"callfunc('"+pageNext+"')\"  class=\"prevnext\">Next »</a></li>&nbsp;"+
+			    	   					"<li><a  onClick=\"callfunc('"+pagingScript_pageCount+"')\" class=\"prevnext\">Last »</a></li>";
+				   pageStr=pageStr+"</ul>";
+				   $("#entry_total").html("Totals "+size+" entries");
+				   $("#entry_paging").html(pageStr);
             }
 		 }
 	});
@@ -357,7 +483,7 @@ function doEdit(id){
 				<INPUT TYPE="button" value="เพิ่มข้อมูล" style="width: 80px" onClick="javascript:window.location='<spring:url value="/law/articleGroup.do?action=add" htmlEscape="true" />'" >
 			</c:if>
 			<c:if test="${masterLawForm.view=='true'}">
-				<INPUT TYPE="submit" value="ค้นหา" style="width: 80px" onClick="return callfunc('doSearch')" >
+				<INPUT TYPE="submit" value="ค้นหา" style="width: 80px" onClick="return callfunc('1')" >
 			</c:if>
 		</td>
 	</tr>
@@ -395,6 +521,27 @@ function doEdit(id){
         </td>
 	</tr>
 	<tr><td height='5'>&nbsp;</td></tr>
+	<!--  start tag add tr select perpage -->
+	<tr>
+		<td>
+		<table cellpadding="0" cellspacing="0" border="0" class="display" id="example">
+			<thead>
+		       <tr>
+				 <th width="100%" colspan="5" name="th_type" class="Ghead" align="left">
+				Show 
+				<select id="select_perpage" onchange="callfunc('1');">
+				    <option value="10">10</option>
+				    <option value="25">25</option>
+				    <option value="50">50</option>
+				    <option value="100">100</option>
+				</select>entries
+				</th>
+		         </tr>
+	        </thead> 
+		</table>
+		</td>
+	</tr>
+	<!--  end tag add tr select perpage  -->
 	<tr>
 		<td>
 		<table cellpadding="0" cellspacing="0" border="0" class="display" id="example">
@@ -412,19 +559,38 @@ function doEdit(id){
 		</table>
 		</td>
 	</tr>
+	<!--  start tag add tr paging -->
+	<tr>
+		<td>
+		<table cellpadding="0" cellspacing="0" border="0">
+			<thead>
+				<tr>
+		            <th width="50%" colspan="2" name="th_type" class="Ghead" align="left"><span id="entry_total"></span></th>
+			        <th width="50%" colspan="3" name="th_type" class="Ghead" align="right"><span id="entry_paging" class="pagination"></span></th> 
+		        </tr>
+			</thead> 
+		</table>
+		</td>
+	</tr>
+	<!--  end tag add tr paging -->
 </table>
 </form:form >
 <script type="text/javascript">
 $(document).ready(function() {
 	oTable = $('#example').dataTable( {
-		"bProcessing": true,
+		/* "bProcessing": true,
 		"bFilter": false,
 		"sPaginationType": "aoe_paging",
 		"aoColumnDefs": [ 
 		     				{ "bSortable": false, "aTargets": [4] }
-		     			]
+		     			] */
+		"bProcessing": true,
+		"bFilter": false,
+		"bPaginate":false,
+		"bSort": false,
+		"bInfo": false
 	} );
-	callfunc('doSearch');
+	callfunc('1');
 });
 </script>
 <script type="text/javascript">
