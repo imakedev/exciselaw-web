@@ -3,8 +3,6 @@ package com.excise.law.service;
 import java.math.BigDecimal;
 import java.util.List;
 
-import org.springframework.dao.DataAccessException;
-
 import com.excise.law.domain.MsStatute;
 import com.excise.law.domain.MsStatutesub;
 import com.excise.law.domain.StStatutesub;

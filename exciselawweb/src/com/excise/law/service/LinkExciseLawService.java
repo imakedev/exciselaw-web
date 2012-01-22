@@ -6,11 +6,19 @@ import com.excise.law.domain.MsStatute;
 import com.excise.law.domain.MsStatutesub;
 import com.excise.law.domain.StMatr;
 import com.excise.law.domain.StStatutesub;
-import com.excise.law.domain.TsRel; //a 
-import com.excise.law.domain.TsRelDTO; //a
-import com.excise.law.domain.TsRelKeyMap; //a
-import com.excise.law.domain.TsRelMap; 
-import com.excise.law.domain.TsRelTableMap; //a
+import com.excise.law.domain.TmArticleGroup;
+import com.excise.law.domain.TmArticleSection;
+import com.excise.law.domain.TmLawType;
+import com.excise.law.domain.TmStatue;
+import com.excise.law.domain.TsArticle;
+import com.excise.law.domain.TsExArticleCompleted;
+import com.excise.law.domain.TsExArticleHeader;
+import com.excise.law.domain.TsLaw;
+import com.excise.law.domain.TsRel;
+import com.excise.law.domain.TsRelDTO;
+import com.excise.law.domain.TsRelKeyMap;
+import com.excise.law.domain.TsRelMap;
+import com.excise.law.domain.TsRelTableMap;
 
 public interface LinkExciseLawService {
 	public List<TsRelTableMap> listRelTableMap();
@@ -39,4 +47,24 @@ public interface LinkExciseLawService {
 	public Long saveTsRel(TsRel persistentInstance);
 	public int updateTsRel(TsRel transientInstance);
 	public List<TsRelDTO>  deleteTsRel(TsRel persistentInstance);
+	
+	// new Link
+	public List<TmStatue> listTmStatues();
+	public List<TmLawType> listTmLawTypes();
+	
+	public List<TmArticleGroup> listTmArticleGroups();
+	public List<TmArticleSection> listTmArticleSections();
+	
+	public List<TsExArticleCompleted> listTsExArticleCompleteds(String statueId, String lawTypeId);
+	public List<TsArticle> listTsArticles(String statueId, String lawTypeId);
+	public List<TsLaw> listTsLaws (String statueId, String lawTypeId);
+	
+	public List<TsExArticleHeader> listTsExArticleHeader(String type,String statueId, String lawTypeId);
+	
+	public List<TsRelDTO> listExistingLink(Long rmId);
+	public TsLaw getTsLaw(Long lawId);
+	public List<TsArticle> getTsArticleList(String groupId);
+	
+	public TsExArticleCompleted getTsExArticleCompleted(Long articleCompletedId);
+	public TsArticle getTsArticle(Long articleId);
 }
